@@ -1,0 +1,10 @@
+HighBay parameter list
+HighBay_columns(高架库列数) = 8
+Column_width(高架库单列宽度) = 2.45
+HighBay_floors(高架库层数) = 9
+AltitudeAgl(高架库首层距地高度) = 0.93
+Floors_high(高架库每层高度) = 【2.1 2.35 2.1 2.35 2.1 2.35 2.1 2.35 2.31】
+HighBay_Depth(高架库仓位深度) = 0.8
+Front_HorizontalStanchion_size(正面水平支柱尺寸) = 【2.35 0.05 0.12】
+Side_slope_angle(侧面支柱倾斜角度) = 32
+
