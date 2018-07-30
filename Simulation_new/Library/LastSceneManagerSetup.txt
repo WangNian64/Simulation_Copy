@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Test.unity
+- path: F:/ZhuJunjie/Git/Simulation_origin/Assets/Test.unity
   isLoaded: 1
   isActive: 1

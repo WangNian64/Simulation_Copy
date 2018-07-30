@@ -387,7 +387,6 @@ public void CreateCargo(Vector3 CargoSize, GameObject Cargo)
         CargoSize.y = HP.Size.x;
         CargoSize.z = HP.Size.x;
 
-
         RollerConveyor_Parameter RCP;
         RCP.RCLength = HP.ColumnWidth;//输送机的长度设为高架库单列宽度
         RCP.RollerRadius = 0.05f;//滚筒半径
