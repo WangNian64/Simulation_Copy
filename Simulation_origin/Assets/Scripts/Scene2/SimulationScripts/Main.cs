@@ -33,9 +33,7 @@ public class Main : MonoBehaviour
         int HighBayNum = GlobalVariable.KPD.HighBaysNum; int ColumnNum = GlobalVariable.KPD.StorePositions.StoreColumnPositions.Length;
         int FloorNum = GlobalVariable.KPD.StorePositions.StoreFloorPositions.Length; int PlaceNum = GlobalVariable.KPD.StorePositions.StorePlacePosition.Length;
         GlobalVariable.BinState = new StorageBinState[HighBayNum, FloorNum, ColumnNum, PlaceNum];
-        //GlobalVariable.EnterCargosList = new List<GameObject>();
         GlobalVariable.StoredCargosNameList = new List<string>();
-        //GlobalVariable.ExitCargosList = new List<GameObject>();
         GlobalVariable.TempQueue = new Queue<GameObject>();
         GlobalVariable.BinColor = new Color[6];
         GlobalVariable.BinColor[0] = new Color(192f / 255f, 192f / 255f, 192f / 255f, 255f / 255f);
@@ -49,10 +47,12 @@ public class Main : MonoBehaviour
         //GlobalVariable.CargoStateList = new List<GlobalVariable.CargoState>();
         PilerNums = (GameObject.Find("WarehouseScene").GetComponent<ShowKeyPositionData>().KeyPositionsData.HighBaysNum + 1) / 2;
         GlobalVariable.PilersState = new State[PilerNums];
-        GlobalVariable.UnidirectionalConveyorStates = new State[PilerNums + 4, 2];
+        //单向9个
+        GlobalVariable.UnidirectionalConveyorStates = new State[PilerNums + 5, 2];
         GlobalVariable.BidirectionalConveyorStates = new State[PilerNums, 3, 2];
         GlobalVariable.ConveyorDirections = new Direction[PilerNums];
-        GlobalVariable.LiftTransferStates = new State[PilerNums + 1];
+        //顶升增多1个
+        GlobalVariable.LiftTransferStates = new State[PilerNums + 2];
         GlobalVariable.ConveyorQueue = new Queue<GameObject>[PilerNums];
         GlobalVariable.PilerQueue = new Queue<GameObject>[PilerNums];
         GlobalVariable.Wait = new WaitState[PilerNums];
@@ -82,7 +82,7 @@ public class Main : MonoBehaviour
             GlobalVariable.EnterQueue[i] = new Queue<GameObject>();
             GlobalVariable.ExitQueue[i] = new Queue<GameObject>();
             GlobalVariable.PilersState[i] = State.Off;
-            GlobalVariable.UnidirectionalConveyorStates[i, 0] = State.Off; GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.Off;
+            
             GlobalVariable.ConveyorDirections[i] = Direction.Enter;
             GlobalVariable.LiftTransferStates[i] = State.Off;
             GlobalVariable.BidirectionalConveyorStates[i, 0, 0] = State.Off; GlobalVariable.BidirectionalConveyorStates[i, 0, 1] = State.Off;
@@ -90,57 +90,103 @@ public class Main : MonoBehaviour
             GlobalVariable.BidirectionalConveyorStates[i, 2, 0] = State.Off; GlobalVariable.BidirectionalConveyorStates[i, 2, 1] = State.Off;
             GlobalVariable.PilerBodyPartPositions[i] = GameObject.Find("WarehouseScene/PilerGroup").transform.Find("Piler" + (i + 1).ToString()).transform.Find("BodyPart").transform.localPosition;
         }
-        GlobalVariable.UnidirectionalConveyorStates[PilerNums, 0] = State.Off; GlobalVariable.UnidirectionalConveyorStates[PilerNums, 1] = State.Off;
-        GlobalVariable.UnidirectionalConveyorStates[PilerNums + 1, 0] = State.Off; GlobalVariable.UnidirectionalConveyorStates[PilerNums + 1, 1] = State.Off;
-        GlobalVariable.UnidirectionalConveyorStates[PilerNums + 2, 0] = State.Off; GlobalVariable.UnidirectionalConveyorStates[PilerNums + 2, 1] = State.Off;
-        GlobalVariable.UnidirectionalConveyorStates[PilerNums + 3, 0] = State.Off; GlobalVariable.UnidirectionalConveyorStates[PilerNums + 3, 1] = State.Off;
+        for (int i=0;i<PilerNums + 5; i++)
+        {
+            GlobalVariable.UnidirectionalConveyorStates[i, 0] = State.Off; GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.Off;
+        }
         GlobalVariable.LiftTransferStates[PilerNums] = State.Off;
+        GlobalVariable.LiftTransferStates[PilerNums + 1] = State.Off;
         #endregion
 
         //事件系统
         GameObject EventSystem = Instantiate((GameObject)Resources.Load("Scene/Simulation/EventSystem"));
         EventSystem.name = "EventSystem";
         //输送线关键位置
-        GlobalVariable.UnidirectionalPositions = new Vector3[PilerNums + 4, 2];
+        int UniCSum, BiCSum, LiftSum;
+        UniCSum = PilerNums + 5;
+        LiftSum = PilerNums + 2;
+        GlobalVariable.UnidirectionalPositions = new Vector3[UniCSum, 2];
         GlobalVariable.BidirectionalPositions = new Vector3[PilerNums, 3, 2];
-        GlobalVariable.LiftTransferPositions = new Vector3[PilerNums + 1, 2];
+        GlobalVariable.LiftTransferPositions = new Vector3[LiftSum, 2];
         //GlobalVariable.LiftTransferPositions关键点坐标
         #region
-        for (int i = 0; i <= PilerNums; i++)
+        //先计算第一个liftTransfer的坐标
+        Vector3 liftPos0 = GlobalVariable.KPD.EnterPosition;
+        liftPos0.z = liftPos0.z - GlobalVariable.KPD.ConveyorLengths[0] * 2 - GlobalVariable.KPD.ConveyorWidth / 2;
+        liftPos0.y = GlobalVariable.KPD.HighValues[1];//顶升高度
+        GlobalVariable.LiftTransferPositions[0, 0] = liftPos0;
+
+        GlobalVariable.LiftTransferPositions[0, 1] = liftPos0;
+        GlobalVariable.LiftTransferPositions[0, 1].y = GlobalVariable.KPD.HighValues[0];//高度不一样
+        
+
+        float liftTempX = liftPos0.x;
+        //其他liftTransfer的坐标(从第二个开始)
+        for (int i = 1; i < LiftSum; i++)
         {
-            GlobalVariable.LiftTransferPositions[i, 0] = GlobalVariable.KPD.EnterPosition;
-            GlobalVariable.LiftTransferPositions[i, 0].x = GlobalVariable.KPD.EnterPosition.x - (i + 1) * GlobalVariable.KPD.ConveyorLengths[1]
-                - i * GlobalVariable.KPD.ConveyorWidth - GlobalVariable.KPD.ConveyorWidth / 2;
+            GlobalVariable.LiftTransferPositions[i, 0] = liftPos0;
+            if (i != PilerNums + 1)
+            {
+                GlobalVariable.LiftTransferPositions[i, 0].x = liftPos0.x - GlobalVariable.KPD.EnterRCP_Length
+                    - (i - 1) * GlobalVariable.KPD.ConveyorLengths[1] - i * GlobalVariable.KPD.ConveyorWidth;
+            } else//最后一个不一样
+            {
+                GlobalVariable.LiftTransferPositions[i, 0].x = liftPos0.x - GlobalVariable.KPD.EnterRCP_Length
+                    - (i - 2) * GlobalVariable.KPD.ConveyorLengths[1] - i * GlobalVariable.KPD.ConveyorWidth
+                    - GlobalVariable.KPD.ExitRCP_Length;
+            }
             GlobalVariable.LiftTransferPositions[i, 1] = GlobalVariable.LiftTransferPositions[i, 0];
-            GlobalVariable.LiftTransferPositions[i, 1].y = GlobalVariable.KPD.HighValues[0];
+            GlobalVariable.LiftTransferPositions[i, 1].y = GlobalVariable.KPD.HighValues[0];//高度不一样
         }
         #endregion
         //GlobalVariable.UnidirectionalPositions关键点的坐标
         #region
         //GlobalVariable.UnidirectionalPositions[0] = GlobalVariable.KPD.EnterPosition;
-        for (int i = 0; i <= PilerNums; i++)
+        //入口2个皮带输送机
+        for (int i = 0; i < 2; i++)
         {
             GlobalVariable.UnidirectionalPositions[i, 0] = GlobalVariable.KPD.EnterPosition;
-            GlobalVariable.UnidirectionalPositions[i, 0].x = GlobalVariable.KPD.EnterPosition.x - GlobalVariable.KPD.CargoSize.x / 2
-                - i * (GlobalVariable.KPD.ConveyorLengths[1] + GlobalVariable.KPD.ConveyorWidth);
-            GlobalVariable.UnidirectionalPositions[i, 1] = GlobalVariable.UnidirectionalPositions[i, 0];
-            GlobalVariable.UnidirectionalPositions[i, 1].x = GlobalVariable.UnidirectionalPositions[i, 0].x
-                - (GlobalVariable.KPD.ConveyorLengths[1] - GlobalVariable.KPD.CargoSize.x);
+            GlobalVariable.UnidirectionalPositions[i, 0].z = GlobalVariable.KPD.EnterPosition.z - GlobalVariable.KPD.CargoSize.z / 2
+                - i * GlobalVariable.KPD.ConveyorLengths[0];
+            GlobalVariable.UnidirectionalPositions[i, 1] = GlobalVariable.KPD.EnterPosition;
+            GlobalVariable.UnidirectionalPositions[i, 1].z = GlobalVariable.UnidirectionalPositions[i,0].z
+                - (GlobalVariable.KPD.ConveyorLengths[0] - GlobalVariable.KPD.CargoSize.z);
         }
-        GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0] = GlobalVariable.LiftTransferPositions[PilerNums, 1];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0].z = GlobalVariable.UnidirectionalPositions[PilerNums, 1].z
-            + (GlobalVariable.KPD.ConveyorWidth + GlobalVariable.KPD.CargoSize.z) / 2 + 0.2f;
-        GlobalVariable.UnidirectionalPositions[PilerNums + 1, 1] = GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 1, 1].z = GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0].z
-            + (GlobalVariable.KPD.ConveyorLengths[0] - GlobalVariable.KPD.CargoSize.z - 0.4f);
-        GlobalVariable.UnidirectionalPositions[PilerNums + 2, 0] = GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 2, 0].z = GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0].z + GlobalVariable.KPD.ConveyorLengths[0];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 2, 1] = GlobalVariable.UnidirectionalPositions[PilerNums + 1, 1];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 2, 1].z = GlobalVariable.UnidirectionalPositions[PilerNums + 1, 1].z + GlobalVariable.KPD.ConveyorLengths[0];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 3, 0] = GlobalVariable.UnidirectionalPositions[PilerNums + 2, 0];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 3, 0].z = GlobalVariable.UnidirectionalPositions[PilerNums + 2, 0].z + GlobalVariable.KPD.ConveyorLengths[0];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 3, 1] = GlobalVariable.UnidirectionalPositions[PilerNums + 2, 1];
-        GlobalVariable.UnidirectionalPositions[PilerNums + 3, 1].z = GlobalVariable.UnidirectionalPositions[PilerNums + 2, 1].z + GlobalVariable.KPD.ConveyorLengths[0];
+        //中间的滚筒输送机
+        Vector3 RCPos0 = liftPos0;//第一个滚筒的位置
+        RCPos0.x = RCPos0.x - GlobalVariable.KPD.ConveyorWidth / 2 - GlobalVariable.KPD.CargoSize.x / 2;
+        GlobalVariable.UnidirectionalPositions[2, 0] = RCPos0;
+        GlobalVariable.UnidirectionalPositions[2, 1] = RCPos0;
+        GlobalVariable.UnidirectionalPositions[2, 1].x = GlobalVariable.UnidirectionalPositions[2, 0].x
+                - (GlobalVariable.KPD.EnterRCP_Length - GlobalVariable.KPD.CargoSize.x);
+        //其他滚筒
+        for (int i = 3; i < PilerNums + 3; i++)
+        {
+            GlobalVariable.UnidirectionalPositions[i, 0] = RCPos0;
+            GlobalVariable.UnidirectionalPositions[i, 0].x = RCPos0.x - GlobalVariable.KPD.EnterRCP_Length
+                - (i - 3) * GlobalVariable.KPD.ConveyorLengths[1] - (i - 2) * GlobalVariable.KPD.ConveyorWidth;
+            GlobalVariable.UnidirectionalPositions[i, 1] = GlobalVariable.UnidirectionalPositions[i, 0];
+            if (i != PilerNums + 2)
+            {
+                GlobalVariable.UnidirectionalPositions[i, 1].x = GlobalVariable.UnidirectionalPositions[i, 0].x
+                    - (GlobalVariable.KPD.ConveyorLengths[1] - GlobalVariable.KPD.CargoSize.x);
+            } else {//最后一个滚筒不一样
+                GlobalVariable.UnidirectionalPositions[i, 1].x = GlobalVariable.UnidirectionalPositions[i, 0].x
+                    - (GlobalVariable.KPD.ExitRCP_Length - GlobalVariable.KPD.CargoSize.x);
+            }
+        }
+        //出库的皮带输送机
+        for (int i = PilerNums + 3; i < UniCSum; i++)
+        {
+            //以最后一个顶升的位置作为参考
+            GlobalVariable.UnidirectionalPositions[i, 0] = GlobalVariable.LiftTransferPositions[LiftSum - 1, 1];
+            GlobalVariable.UnidirectionalPositions[i, 0].z = GlobalVariable.UnidirectionalPositions[i, 0].z +
+                GlobalVariable.KPD.ConveyorWidth / 2 + GlobalVariable.KPD.CargoSize.z / 2 
+                + GlobalVariable.KPD.ConveyorLengths[0] * (i-(PilerNums+3));
+            GlobalVariable.UnidirectionalPositions[i, 1] = GlobalVariable.UnidirectionalPositions[i, 0];
+            GlobalVariable.UnidirectionalPositions[i, 1].z = GlobalVariable.UnidirectionalPositions[i, 1].z
+                + GlobalVariable.KPD.ConveyorLengths[0] - GlobalVariable.KPD.CargoSize.z;
+        }
         #endregion
         //GlobalVariable.BidirectionalPositions关键点坐标
         #region
@@ -157,6 +203,32 @@ public class Main : MonoBehaviour
             }
         }
 
+        #endregion
+        //测试：
+        #region 
+        //GameObject tempCargo = Instantiate((GameObject)Resources.Load("Scene/Simulation/Cargo"));
+        //tempCargo.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //tempCargo.transform.localPosition = new Vector3(0, 0, 0);
+        ////单向输送机
+        //for (int i = 0; i < UniCSum; i++)
+        //{
+        //    GameObject obj = Instantiate(tempCargo);
+        //    obj.transform.localPosition = GlobalVariable.UnidirectionalPositions[i, 0];
+        //    obj.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //    GameObject obj1 = Instantiate(tempCargo);
+        //    obj1.transform.localPosition = GlobalVariable.UnidirectionalPositions[i, 1];
+        //    obj1.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //}
+        ////liftTransfer
+        //for (int i = 0; i < PilerNums + 2; i++)
+        //{
+        //    GameObject obj = Instantiate(tempCargo);
+        //    obj.transform.localPosition = GlobalVariable.LiftTransferPositions[i, 0];
+        //    obj.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //    GameObject obj1 = Instantiate(tempCargo);
+        //    obj1.transform.localPosition = GlobalVariable.LiftTransferPositions[i, 1];
+        //    obj1.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //}
         #endregion
     }
     // Use this for initialization

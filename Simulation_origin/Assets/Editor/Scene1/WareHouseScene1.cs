@@ -487,10 +487,14 @@ public class WareHouseScene1 : EditorWindow
         KeyPositionsData KP = new KeyPositionsData();
         KP.HighBaysNum = MHP.Num;//高架库数目
 
+        //2个特殊滚筒输送机的长度
+        KP.EnterRCP_Length = enterRollerLength;
+        KP.ExitRCP_Length = exitRollerLength;
         //Vector3[] LiftTransferPositions = new Vector3[]
         KP.HighValues = new float[] { RCP.RCHigh, RCP.RCHigh - 0.1f };//两种输送线高度
         KP.ConveyorLengths = new float[2] { RCP.RCLength, HP.Size.x * 2 + MHP.HookupDistance + MHP.TunnelWidth - RCP.RCWidth };
-        KP.EnterPosition = new Vector3((KP.ConveyorLengths[1] + RCP.RCWidth - HP.Size.x), RCP.RCHigh - 0.1f, -RCP.RCWidth / 2);//入口处坐标
+        //入口处坐标
+        KP.EnterPosition = new Vector3((KP.EnterRCP_Length + RCP.RCWidth - HP.Size.x + RCP.RCWidth / 2), KP.HighValues[0], KP.ConveyorLengths[0]*2);
         float[] ConveyorLinesValues = new float[(MHP.Num + 1) / 2];
         float[] PilerLinesValues = new float[(MHP.Num + 1) / 2];
 
@@ -530,8 +534,7 @@ public class WareHouseScene1 : EditorWindow
         StorePositions.StoreColumnPositions = StoreColumnPositions;
         StorePositions.StorePlacePosition = StorePlacePosition;
         KP.StorePositions = StorePositions;//高架库仓位坐标信息
-        ////货物入口坐标（相对于设备）
-        //KP.CargoEnterPosition = new Vector3(0, KP.HighValues[0], KP.ConveyorLengths[0]);
+
         KPD = KP;
     }
     #endregion

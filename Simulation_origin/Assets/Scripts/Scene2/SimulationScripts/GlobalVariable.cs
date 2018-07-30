@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum FacilityState {Normal=0,Error=1}//设备好坏状态
-
 public enum WaitState { None=0,WaitEnter=1,WaitExit=2}//等待状态
 public enum State { On=1,Off=0}//设备开关状态
 public enum Direction { Enter=1,Exit=0}//输送线方向

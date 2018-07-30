@@ -44,5 +44,8 @@ public class KeyPositionsData
     public Vector3[] HighBaysPositions;//高架库的坐标值
     public Vector3 CargoSize;//货物尺寸
     public StorePositions StorePositions;
+
+    public float EnterRCP_Length;//入口滚筒输送机长度
+    public float ExitRCP_Length;//出口滚筒输送机长度
 }
 
