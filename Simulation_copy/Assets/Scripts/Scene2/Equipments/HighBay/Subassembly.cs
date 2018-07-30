@@ -22,7 +22,6 @@ public class Subassembly : MonoBehaviour {
     #region HighBay_ReadTxt
     public static void HighBay_ReadTxt(ref string path, out HighStoreShelf_Parameter HP)
     {
-        //Debug.Log(path);
         string[] strs1 = System.IO.File.ReadAllLines(path);
         //读取高架库列数
         int i1 = strs1[1].IndexOf("= ") + 1; string str1 = strs1[1].Remove(0, i1);
@@ -57,22 +56,16 @@ public class Subassembly : MonoBehaviour {
         //读取侧面支柱倾斜角度
         int i8 = strs1[8].IndexOf("= ") + 1; string str8 = strs1[8].Remove(0, i8);
         float slope_angle = float.Parse(str8); //Debug.Log(slope_angle);
-
-        //HighBay_Parameter HP;
+        
         HP.ColumnsNum = columns_num;
-        //HP.ColumnWidth = column_width;
         HP.FloorsNum = floors_num;
         HP.FloorsHigh = FloorsHigh;
         HP.Height2Ground = AltitudeAgl;
         HP.HorizontalStanchionThick = HorizontalStanchion_size[2];
         HP.ColumnWidth = HorizontalStanchion_size[0];
         HP.VerticalStanchionWidth = column_width - HP.ColumnWidth;
-        //HP.HighBay_Depth = HighBay_Depth;
-        //HP.HorizontalStanchionSize = HorizontalStanchion_size;
-        //HP.SlopeAngle = slope_angle;
         float[] size = { (columns_num + 2) * column_width, HighBay_Depth, High };
         HP.Size = new Vector3(HighBay_Depth, High + AltitudeAgl, column_width * columns_num);
-        //return HP;
     }
     #endregion
 

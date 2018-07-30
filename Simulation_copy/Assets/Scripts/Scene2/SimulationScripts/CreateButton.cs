@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.UI;
 
 public class CreateButton : MonoBehaviour {
@@ -19,9 +20,9 @@ public class CreateButton : MonoBehaviour {
         bool condition = (HighBayNum != null) && (FloorNum != null) && (ColumnNum != null) && (PlaceNum != null) && (CargoNum != null) && (EnterTime != null) && (CargoDescription != null);
         if (condition)
         {
-            int HighBayNum2 = int.Parse(HighBayNum);
-            int FloorNum2 = int.Parse(FloorNum);
-            int ColumnNum2 = int.Parse(ColumnNum);
+            int HighBayNum2 = int.Parse(HighBayNum);//库号
+            int FloorNum2 = int.Parse(FloorNum);//层号
+            int ColumnNum2 = int.Parse(ColumnNum);//列号
             //Place place1;
             switch (PlaceNum)
             {
@@ -59,12 +60,36 @@ public class CreateButton : MonoBehaviour {
                     CI.PositionInfo.ColumnNum = ColumnNum2;
                     CI.PositionInfo.FloorNum = FloorNum2;
                     CI.PositionInfo.place = place1;
+                    //添加货物的设备队列
+                    CI.EquipmentsQueue = new Queue<GameObject>();
+
+                    //入口要加一些设备
+                    for (int i=0;i<(HighBayNum2 + 1) / 2; i++)
+                    {
+                        CI.EquipmentsQueue.Enqueue(GameObject.Find("UniConveyor" + (i + 1)));
+                        CI.EquipmentsQueue.Enqueue(GameObject.Find("LiftTransfer" + (i + 1)));
+                    }
+                    //顶升部分
+                    CI.EquipmentsQueue.Enqueue(GameObject.Find("LiftPart" + (HighBayNum2 + 1) / 2));
+                    for (int j = 0; j < 3; j++)
+                    {
+                        CI.EquipmentsQueue.Enqueue(GameObject.Find("BiConveyor"+ (HighBayNum2 + 1) / 2+ "_" + j));
+                    }
+
                     Cargo.AddComponent<ShowCargoInfo>().Cargomessage = CI;
                     Cargo.AddComponent<OperatingState>().state = CargoState.WaitIn;//开始状态是等待进入
-                    Cargo.transform.parent = GameObject.Find("WarehouseScene").transform;
-                    Cargo.transform.localPosition = GlobalVariable.KPD.EnterPosition;//放到开始位置
+                    //Cargo.transform.parent = GameObject.Find("WarehouseScene").transform;
+                    Cargo.transform.parent = CI.EquipmentsQueue.Peek().transform;//货物产生后成为第一个设备的子物体
+                    //Cargo.transform.localPosition = GlobalVariable.KPD.EnterPosition;//放到开始位置
+
+                    //货物的初始位置
+                    Cargo.transform.localPosition = GlobalVariable.KPD.CargoEnterPosition;
+
+
                     GameObject.Find("Notice").GetComponent<Text>().text = "创建成功！";
+
                     GlobalVariable.TempQueue.Enqueue(Cargo);//放入TempQueue队列
+
                     //binName是对应货物面板的一个格子
                     string BinName = "StorageStateInterface/MainBody/Scroll View/Viewport/Content/ShelfPanel" + HighBayNum2.ToString();
                     BinName = BinName + "/Scroll View/Viewport/Content/Panel/BinsPanel/FloorItem" + FloorNum2.ToString();
@@ -85,7 +110,6 @@ public class CreateButton : MonoBehaviour {
                     Item.transform.Find("Name").GetComponent<Text>().text = Item.name;
                     Item.transform.Find("State").GetComponent<Text>().text = "货物状态：" + "等待入库";
                     Item.transform.parent = GameObject.Find("ProcessInterface/MainBody/Scroll View/Viewport/Content").transform;
-                    
                 }
                 else if(GlobalVariable.StoredCargosNameList.Contains(CargoName))
                 {

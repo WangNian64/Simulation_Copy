@@ -9,20 +9,91 @@ public class Main : MonoBehaviour
 
     public float Speed;
     private bool[] finish1;
-    private bool[] finish2;
     public bool AccomplishValue;
     private string CargoName;
     private GameObject[] Cargo;
     private GameObject[] Piler;
     private int PilerNums;//Piler的总数目
     private int PilerNum;
-    private float Times1;//没用到
     private bool[] KeyFrame;
+    
+    //初始化所有设备的状态信息
+    private void initializeEquipState()
+    {
+        //赋值
+        //双向输送线
+        for (int i = 0; i < PilerNums; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                
+                BiConveyorState biConveyorState = new BiConveyorState();
+                biConveyorState.kind = GlobalVariable.biConveyorName;
+                biConveyorState.index = (i + 1) + "_" + (j + 1);
+                biConveyorState.workState = State.Off;
+                biConveyorState.facilityState = FacilityState.Normal;
+                biConveyorState.deliverDirection = new Vector3(0, 0, 1);
+                biConveyorState.deliverSpeed = Speed;
+                biConveyorState.isExcusive = Exclusive.No;
+                GameObject.Find(biConveyorState.kind + biConveyorState.index).GetComponent<ShowEquipState>().equipmentState = biConveyorState;
+            }
+        }
+        //单向输送线
+        for (int i = 0; i < PilerNums + 4; i++)
+        {
+            UniConveyorState uniConveyorState = new UniConveyorState();
+            uniConveyorState.kind = GlobalVariable.uniConveyorName;
+            uniConveyorState.index = (i + 1) + "";
+            uniConveyorState.workState = State.Off;
+            if (i == 0)//初始化第一个设备ON
+            {
+                uniConveyorState.workState = State.On;
+            }
+            uniConveyorState.facilityState = FacilityState.Normal;
+
+            //退出的三个输送线
+            if (i<PilerNums + 1)
+            {
+                uniConveyorState.deliverDirection = new Vector3(0, 0, 1);
+            } else
+            {
+                uniConveyorState.deliverDirection = new Vector3(0, 0, 1);
+            }
+            uniConveyorState.deliverSpeed = Speed;
+            uniConveyorState.isExcusive = Exclusive.No;
+            GameObject.Find(uniConveyorState.kind + uniConveyorState.index).GetComponent<ShowEquipState>().equipmentState = uniConveyorState;
+        }
+        //顶升移载机
+        for (int i = 0; i < PilerNums + 1; i++)
+        {
+            LiftTransferState liftTransferState = new LiftTransferState();
+            liftTransferState.kind = GlobalVariable.liftTransferName;
+            liftTransferState.index = (i + 1) + "";
+            liftTransferState.workState = State.Off;
+            liftTransferState.facilityState = FacilityState.Normal;
+            liftTransferState.deliverDirection = new Vector3(-1, 0, 0);
+            liftTransferState.deliverSpeed = Speed;
+            liftTransferState.isExcusive = Exclusive.No;
+            //顶升部分
+            LiftPartState liftPartState = new LiftPartState();
+            liftPartState.kind = GlobalVariable.liftPartName;
+            liftPartState.index = (i + 1) + "";
+            liftPartState.workState = State.Off;
+            liftPartState.facilityState = FacilityState.Normal;
+            liftPartState.deliverDirection = new Vector3(0, 1, 0);//默认抬升
+            liftPartState.deliverSpeed = Speed / 30;//顶升的抬升速度是1/30
+            liftPartState.isExcusive = Exclusive.Yes;
+            liftPartState.liftPattern = LiftPattern.up;
+            GameObject.Find(liftTransferState.kind + liftTransferState.index).GetComponent<ShowEquipState>().equipmentState = liftTransferState;
+            GameObject.Find(liftPartState.kind + liftPartState.index)
+                .GetComponent<ShowEquipState>().equipmentState = liftPartState;
+        }
+    }
     private void Awake()
     {
         //摄像机参数设置
         GameObject.Find("Main Camera").AddComponent<InitCamera>();
-        //参数计算
+        //速度
         Speed = 1.5f;
 
         //全局变量初始化操作
@@ -36,7 +107,7 @@ public class Main : MonoBehaviour
         //GlobalVariable.EnterCargosList = new List<GameObject>();
         GlobalVariable.StoredCargosNameList = new List<string>();
         //GlobalVariable.ExitCargosList = new List<GameObject>();
-        GlobalVariable.TempQueue = new Queue<GameObject>();
+
         GlobalVariable.BinColor = new Color[6];
         GlobalVariable.BinColor[0] = new Color(192f / 255f, 192f / 255f, 192f / 255f, 255f / 255f);
         GlobalVariable.BinColor[1] = new Color(255f / 255f, 255f / 255f, 0f / 255f, 255f / 255f);
@@ -59,13 +130,17 @@ public class Main : MonoBehaviour
         GlobalVariable.EnterQueue = new Queue<GameObject>[PilerNums];
         GlobalVariable.ExitQueue = new Queue<GameObject>[PilerNums];
         GlobalVariable.PilerBodyPartPositions = new Vector3[PilerNums];
+
+
+        //新增
+        initializeEquipState();
+
         #endregion
         //局部变量初始化操作
         #region
         Cargo = new GameObject[PilerNums];
         Piler = new GameObject[PilerNums];
         finish1 = new bool[PilerNums];
-        finish2 = new bool[PilerNums];
         KeyFrame = new bool[PilerNums];
         for (int i = 0; i < PilerNums; i++)
         {
@@ -168,7 +243,6 @@ public class Main : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        Times1 = Time.time;//没有用到
         if (GlobalVariable.TempQueue.Count > 0)//得到堆垛机编号
         {
             PilerNum = (GlobalVariable.TempQueue.Peek().GetComponent<ShowCargoInfo>().Cargomessage.PositionInfo.HighBayNum + 1) / 2;
@@ -178,13 +252,13 @@ public class Main : MonoBehaviour
             //入库货物情况
             if (PilerNum == i + 1 && finish1[i] == true && GlobalVariable.TempQueue.Count > 0)
             {
+                Debug.Log("有货物进入Tempueue");
                 Cargo[i] = GlobalVariable.TempQueue.Peek();
                 //是要入库的货物
                 if (Cargo[i].GetComponent<OperatingState>().state == CargoState.WaitIn)
                 {
                     KeyFrame[i] = true;
-                    Cargo[i].AddComponent<CargoEnter>().enabled = false;
-                    Cargo[i].GetComponent<CargoEnter>().Speed = Speed;
+                    Cargo[i].AddComponent<CargoEnterController>().enabled = false;
                     Cargo[i].GetComponent<OperatingState>().state = CargoState.Enter;//改为正在入库
                     GameObject.Find("ProcessInterface/MainBody/Scroll View/Viewport/Content").transform.Find(Cargo[i].name).transform.Find("State").GetComponent<Text>().text = "货物状态：" + "正在入库";//修改进程面板中该货物状态信息
                     Functions.ChangeColor(Cargo[i].name, StorageBinState.InStore);//颜色修改为“正在入库”
@@ -197,11 +271,13 @@ public class Main : MonoBehaviour
             //入库货物入库动画
             if (GlobalVariable.EnterQueue[i].Count > 0)
             {
+                Debug.Log("有货物进入入库队列");
                 //遍历所有入库货物
                 foreach (GameObject cargo in GlobalVariable.EnterQueue[i])
                 {
                     //执行CargoEnter动画
-                    cargo.GetComponent<CargoEnter>().enabled = true;
+                    cargo.GetComponent<CargoEnterController>().enabled = true;//问题就在这
+
                     //在货物已经到达单向输送机0时 从tempQueue出队
                     if (GlobalVariable.UnidirectionalConveyorStates[0, 0] == State.On && finish1[i] == false)
                     {
@@ -211,67 +287,112 @@ public class Main : MonoBehaviour
                     }
                 }
             }
-            //出库货物出库动画
-            if (GlobalVariable.ExitQueue[i].Count > 0)
-            {
-                //遍历出库队列
-                foreach (GameObject cargo in GlobalVariable.ExitQueue[i])
-                {
-                    //执行出库动画
-                    cargo.GetComponent<CargoExit>().enabled = true;
-                }
-            }
         }
-        //堆垛机动画
-        foreach (GameObject piler in Piler)//遍历所有的堆垛机
-        {
-            int Num = piler.GetComponent<PilerProperty>().PilerNum - 1;//堆垛机编号
-            //添加堆垛机动画脚本   
-            //当前堆垛机空闲 且 有货物在排队（不论是入库还是出库）
-            if (GlobalVariable.PilersState[Num] == State.Off && GlobalVariable.ConveyorQueue[Num].Count > 0)
-            {
-                //拿出一个货物
-                GameObject cargo0 = GlobalVariable.ConveyorQueue[Num].Peek();
-                //添加堆垛机入库动画脚本
-                //货物正在入库 且 堆垛机 
-                if (cargo0.GetComponent<OperatingState>().state == CargoState.Enter && GlobalVariable.Wait[Num] == WaitState.WaitEnter)
-                {
-                    //给堆垛机添加入库动画
-                    piler.AddComponent<PilerOfEnter>().enabled = false;
-                    piler.GetComponent<PilerOfEnter>().Speed = Speed;
-                    piler.GetComponent<PilerOfEnter>().Cargo = cargo0;
-                    piler.GetComponent<PilerOfEnter>().PilerNum = Num;
-                    GlobalVariable.PilersState[Num] = State.On;//堆垛机打开
-                    piler.GetComponent<PilerProperty>().PilerState = State.On;
-                    piler.GetComponent<PilerProperty>().WorkState = Direction.Enter;
-                }
-                //添加堆垛机出库动画脚本
-                if (cargo0.GetComponent<OperatingState>().state == CargoState.WaitOut && GlobalVariable.Wait[Num] == WaitState.None)
-                {
-                    piler.AddComponent<PilerOfExit>().enabled = false;
-                    piler.GetComponent<PilerOfExit>().Speed = Speed;
-                    piler.GetComponent<PilerOfExit>().Cargo = GlobalVariable.ConveyorQueue[Num].Peek();
-                    piler.GetComponent<PilerOfExit>().PilerNum = Num;
-                    GlobalVariable.PilersState[Num] = State.On;
-                    piler.GetComponent<PilerProperty>().PilerState = State.On;
-                    piler.GetComponent<PilerProperty>().WorkState = Direction.Exit;
-                    GlobalVariable.BidirectionalConveyorStates[Num, 2, 1] = State.On;
-                }
-            }
-            //执行动画脚本
-            if (GlobalVariable.PilersState[Num] == State.On)
-            {
-                //入库脚本
-                if (piler.GetComponent<PilerProperty>().WorkState == Direction.Enter)
-                {
-                    piler.GetComponent<PilerOfEnter>().enabled = true;
-                }
-                //出库脚本
-                if (piler.GetComponent<PilerProperty>().WorkState == Direction.Exit)
-                {
-                    piler.GetComponent<PilerOfExit>().enabled = true;
-                }
-            }
-        }
+
+
+        //if (GlobalVariable.TempQueue.Count > 0)//得到堆垛机编号
+        //{
+        //    PilerNum = (GlobalVariable.TempQueue.Peek().GetComponent<ShowCargoInfo>().Cargomessage.PositionInfo.HighBayNum + 1) / 2;
+        //}
+        //for (int i = 0; i < PilerNums; i++)
+        //{
+        //    //入库货物情况
+        //    if (PilerNum == i + 1 && finish1[i] == true && GlobalVariable.TempQueue.Count > 0)
+        //    {
+        //        Cargo[i] = GlobalVariable.TempQueue.Peek();
+        //        //是要入库的货物
+        //        if (Cargo[i].GetComponent<OperatingState>().state == CargoState.WaitIn)
+        //        {
+        //            KeyFrame[i] = true;
+        //            Cargo[i].AddComponent<CargoEnter>().enabled = false;
+        //            Cargo[i].GetComponent<CargoEnter>().Speed = Speed;
+        //            Cargo[i].GetComponent<OperatingState>().state = CargoState.Enter;//改为正在入库
+        //            GameObject.Find("ProcessInterface/MainBody/Scroll View/Viewport/Content").transform.Find(Cargo[i].name).transform.Find("State").GetComponent<Text>().text = "货物状态：" + "正在入库";//修改进程面板中该货物状态信息
+        //            Functions.ChangeColor(Cargo[i].name, StorageBinState.InStore);//颜色修改为“正在入库”
+        //            finish1[i] = false;
+        //            //进入排队队列 和 入队队列
+        //            GlobalVariable.ConveyorQueue[i].Enqueue(Cargo[i]);
+        //            GlobalVariable.EnterQueue[i].Enqueue(Cargo[i]);
+        //        }
+        //    }
+        //    //入库货物入库动画
+        //    if (GlobalVariable.EnterQueue[i].Count > 0)
+        //    {
+        //        //遍历所有入库货物
+        //        foreach (GameObject cargo in GlobalVariable.EnterQueue[i])
+        //        {
+        //            //执行CargoEnter动画
+        //            cargo.GetComponent<CargoEnter>().enabled = true;
+        //            //在货物已经到达单向输送机0时 从tempQueue出队
+        //            if (GlobalVariable.UnidirectionalConveyorStates[0, 0] == State.On && finish1[i] == false)
+        //            {
+        //                //出队
+        //                GlobalVariable.TempQueue.Dequeue();
+        //                finish1[i] = true;//本堆垛机不能用了
+        //            }
+        //        }
+        //    }
+        //    //出库货物出库动画
+        //    if (GlobalVariable.ExitQueue[i].Count > 0)
+        //    {
+        //        //遍历出库队列
+        //        foreach (GameObject cargo in GlobalVariable.ExitQueue[i])
+        //        {
+        //            //执行出库动画
+        //            cargo.GetComponent<CargoExit>().enabled = true;
+        //        }
+        //    }
+        //}
+        ////堆垛机动画
+        //foreach (GameObject piler in Piler)//遍历所有的堆垛机
+        //{
+        //    int Num = piler.GetComponent<PilerProperty>().PilerNum - 1;//堆垛机编号
+        //    //添加堆垛机动画脚本   
+        //    //当前堆垛机空闲 且 有货物在排队（不论是入库还是出库）
+        //    if (GlobalVariable.PilersState[Num] == State.Off && GlobalVariable.ConveyorQueue[Num].Count > 0)
+        //    {
+        //        //拿出一个货物
+        //        GameObject cargo0 = GlobalVariable.ConveyorQueue[Num].Peek();
+        //        //添加堆垛机入库动画脚本
+        //        //货物正在入库 且 堆垛机 
+        //        if (cargo0.GetComponent<OperatingState>().state == CargoState.Enter && GlobalVariable.Wait[Num] == WaitState.WaitEnter)
+        //        {
+        //            //给堆垛机添加入库动画
+        //            piler.AddComponent<PilerOfEnter>().enabled = false;
+        //            piler.GetComponent<PilerOfEnter>().Speed = Speed;
+        //            piler.GetComponent<PilerOfEnter>().Cargo = cargo0;
+        //            piler.GetComponent<PilerOfEnter>().PilerNum = Num;
+        //            GlobalVariable.PilersState[Num] = State.On;//堆垛机打开
+        //            piler.GetComponent<PilerProperty>().PilerState = State.On;
+        //            piler.GetComponent<PilerProperty>().WorkState = Direction.Enter;
+        //        }
+        //        //添加堆垛机出库动画脚本
+        //        if (cargo0.GetComponent<OperatingState>().state == CargoState.WaitOut && GlobalVariable.Wait[Num] == WaitState.None)
+        //        {
+        //            piler.AddComponent<PilerOfExit>().enabled = false;
+        //            piler.GetComponent<PilerOfExit>().Speed = Speed;
+        //            piler.GetComponent<PilerOfExit>().Cargo = GlobalVariable.ConveyorQueue[Num].Peek();
+        //            piler.GetComponent<PilerOfExit>().PilerNum = Num;
+        //            GlobalVariable.PilersState[Num] = State.On;
+        //            piler.GetComponent<PilerProperty>().PilerState = State.On;
+        //            piler.GetComponent<PilerProperty>().WorkState = Direction.Exit;
+        //            GlobalVariable.BidirectionalConveyorStates[Num, 2, 1] = State.On;
+        //        }
+        //    }
+        //    //执行动画脚本
+        //    if (GlobalVariable.PilersState[Num] == State.On)
+        //    {
+        //        //入库脚本
+        //        if (piler.GetComponent<PilerProperty>().WorkState == Direction.Enter)
+        //        {
+        //            piler.GetComponent<PilerOfEnter>().enabled = true;
+        //        }
+        //        //出库脚本
+        //        if (piler.GetComponent<PilerProperty>().WorkState == Direction.Exit)
+        //        {
+        //            piler.GetComponent<PilerOfExit>().enabled = true;
+        //        }
+        //    }
+        //}
     }
 }

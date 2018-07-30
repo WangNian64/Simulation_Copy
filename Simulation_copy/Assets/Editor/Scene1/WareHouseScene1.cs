@@ -15,12 +15,10 @@ public struct ParametersList1
     public Vector3 CargoSize;//货物尺寸
     public Vector3 PlatFormSize;//平台尺寸
 }
-
-
-
 public class WareHouseScene1 : EditorWindow
 {
     private static WareHouseScene1 window;
+
     string path1 = @"Assets/Resources/Scene/高架库参数表";
     int Num = 8;
     //int Order = 0;
@@ -29,8 +27,8 @@ public class WareHouseScene1 : EditorWindow
     string Name = "WarehouseScene";
     string path2 = "Assets/Resources/Scene/Simulation/";
 
-
-
+    float enterRollerLength = 0;
+    float exitRollerLength = 0;
     [MenuItem("CustomObject/WareHouseScene1", priority = 0)]
     static void WareHouseScene_Tool()
     {
@@ -43,12 +41,15 @@ public class WareHouseScene1 : EditorWindow
 
     private void OnGUI()
     {
+        //获取用户输入
         path1 = EditorGUILayout.TextField("高架库设计参数文件：", path1);
         Num = EditorGUILayout.IntField("高架库数目：", Num);
         TunnelWidth = EditorGUILayout.FloatField("高架库间巷道距离：", TunnelWidth);
         HookupDistance = EditorGUILayout.FloatField("高架库间连接距离：", HookupDistance);
         Name = EditorGUILayout.TextField("场景名称：", Name);
         path2 = EditorGUILayout.TextField("场景输出路径：", path2);
+        enterRollerLength = EditorGUILayout.FloatField("入口滚筒输送机长度：", enterRollerLength);
+        exitRollerLength = EditorGUILayout.FloatField("出口滚筒输送机长度：", exitRollerLength);
 
         HighStoreShelf_Parameter HP; string Path1 = path1 + ".txt";
         Subassembly.HighBay_ReadTxt(ref Path1, out HP);
@@ -89,67 +90,96 @@ public class WareHouseScene1 : EditorWindow
         float TempValue2 = RCP.RCWidth;
         float TempValue3 = TempValue2 - HP.Size.x;
         GameObject WarehouseScene = new GameObject(); WarehouseScene.name = Name;//创建场景
-        //货物
+        //存放货物
         GameObject Cargos = new GameObject();
         Cargos.name = "Cargos"; Cargos.transform.parent = WarehouseScene.transform;
         Cargos.transform.localPosition = new Vector3(0, 0, 0);
         //添加地面
         GameObject obj = (GameObject)Resources.Load("Scene/Dimian");
         GameObject dimian = Instantiate(obj);
-        //float Length = 8 * HP.Size.x + 4 * (MHP.HookupDistance + MHP.TunnelWidth) + 2 * RCP.RCLength;
         float Width = HP.Size.z + 8 * RCP.RCLength;
         dimian.transform.localScale = new Vector3(Width, 0.1f, Width);
         dimian.transform.parent = WarehouseScene.transform;
         dimian.transform.localPosition = new Vector3(-(Width / 2 - RCP.RCLength * 4), -0.05f, -(Width / 2 - 2 * RCP.RCLength));
-        //添加入口输送机
-        GameObject EnterConveyor = new GameObject(); EnterConveyor.name = "EnterConveyor";
+        //添加入口滚筒输送机
+        GameObject EnterRollerConveyor = new GameObject(); 
         RollerConveyorType type = RollerConveyorType.Intact;
         RollerConveyor_Parameter RCP2 = new RollerConveyor_Parameter();
-        RCP2 = PL.RCP; RCP2.RCHigh = RCP2.RCHigh - 0.1f;RCP2.RCLength = PL.HP.Size.x * 2 + PL.MHP.HookupDistance + PL.MHP.TunnelWidth - RCP2.RCWidth;
-        RollerConveyor.Create_RollerConveyor(RCP2, EnterConveyor, type);
-        EnterConveyor.transform.parent = WarehouseScene.transform;
-        EnterConveyor.transform.Rotate(0, -90, 0);
-        EnterConveyor.transform.localPosition = new Vector3((RCP2.RCLength + TempValue3), 0, -TempValue2 / 2);
+        RCP2 = PL.RCP; RCP2.RCHigh = RCP2.RCHigh - 0.1f;
+        RCP2.RCLength = enterRollerLength;//长度自定义
+        //RCP2.RCLength = PL.HP.Size.x * 2 + PL.MHP.HookupDistance + PL.MHP.TunnelWidth - RCP2.RCWidth;
+        RollerConveyor.Create_RollerConveyor(RCP2, EnterRollerConveyor, type);
+        EnterRollerConveyor.name = "EnterRollerConveyor";
+        EnterRollerConveyor.transform.parent = WarehouseScene.transform;
+        EnterRollerConveyor.transform.Rotate(0, -90, 0);
+        EnterRollerConveyor.transform.localPosition = new Vector3((RCP2.RCLength + TempValue3), 0, -TempValue2 / 2);
+        //添加入口顶升移栽机
+        LiftTransferParameter LTP = new LiftTransferParameter();
+        LTP.High = PL.RCP.RCHigh - 0.1f;
+        LTP.Width = PL.RCP.RCWidth;
+        LTP.RollerRadius = PL.RCP.RollerRadius;
+        LTP.GearDiameter = PL.RCP.RollerRadius * 2;
+        GameObject enterLiftTransfer = new GameObject();
+        LiftTransfer1.CreateLiftTransfer(enterLiftTransfer, ref LTP);
+        enterLiftTransfer.name = "EnterLiftTransfer";
+        enterLiftTransfer.transform.parent = WarehouseScene.transform;
+        float tempEnterX = RCP2.RCLength - (PL.HP.Size.x - LTP.Width) + LTP.Width / 2;//入口顶升的X坐标
+        enterLiftTransfer.transform.localPosition = new Vector3(tempEnterX, 0, -TempValue2 / 2);
+        //添加入口皮带输送机
+        GameObject EnterBeltConveyors = new GameObject(); EnterBeltConveyors.name = "EnterBeltConveyors";
+        Create_EnterBeltConveyors(PL, EnterBeltConveyors);
+        EnterBeltConveyors.transform.parent = WarehouseScene.transform;
+        EnterBeltConveyors.transform.localPosition = new Vector3(tempEnterX, 0, 0);
         //添加顶升移载机设备
         GameObject LiftTransferGroup = new GameObject(); LiftTransferGroup.name = "LiftTransferGroup";
         Create_LiftTransferGroup(PL, LiftTransferGroup);
-        //LiftTransferGroup.transform.Rotate(0, 180, 0);
         LiftTransferGroup.transform.parent = WarehouseScene.transform;
         LiftTransferGroup.transform.localPosition = new Vector3(0, 0, -TempValue2 / 2);
-        //添加输送设备（垂直于高架库方向）
-        GameObject ConveyorGroup2 = new GameObject(); ConveyorGroup2.name = "ConveyorGroup2";
-        Create_ConveyorGroup2(PL, ConveyorGroup2);
-        //ConveyorGroup2.transform.Rotate(0, 180, 0);
-        ConveyorGroup2.transform.parent = WarehouseScene.transform;
-        ConveyorGroup2.transform.localPosition = new Vector3(0, 0, -TempValue2 / 2);
-        //为场景添加输送设备（平行于高架库方向）
-        GameObject ConveyorGroup = new GameObject(); ConveyorGroup.name = "ConveyorGroup";
-        Create_ConveyorGroup1(PL, ConveyorGroup);
-        //ConveyorGroup.transform.Rotate(0, 180, 0);
-        ConveyorGroup.transform.parent = WarehouseScene.transform;
-        ConveyorGroup.transform.localPosition = new Vector3(0, 0, -TempValue2);
+        //添加滚筒输送机（垂直于高架库方向）
+        GameObject RollerConveyorGroup = new GameObject(); RollerConveyorGroup.name = "RollerConveyorGroup";
+        Create_RollerConveyorGroup(PL, RollerConveyorGroup);
+        RollerConveyorGroup.transform.parent = WarehouseScene.transform;
+        RollerConveyorGroup.transform.localPosition = new Vector3(0, 0, -TempValue2 / 2);
+        //添加皮带输送机（平行于高架库方向）
+        GameObject BeltConveyorGroup = new GameObject(); BeltConveyorGroup.name = "BeltConveyorGroup";
+        Create_BeltConveyorGroup(PL, BeltConveyorGroup);
+        BeltConveyorGroup.transform.parent = WarehouseScene.transform;
+        BeltConveyorGroup.transform.localPosition = new Vector3(0, 0, -TempValue2);
         //为场景添加高架库设备
         GameObject HighBays1 = new GameObject(); HighBays1.name = "HighBayGroup";
         HighBay2.Create_HighBays(HP, MHP, HighBays1);
-        //HighBays1.transform.Rotate(0, 180, 0);
         HighBays1.transform.parent = WarehouseScene.transform;
         HighBays1.transform.localPosition = new Vector3(0, 0, -(3 * TempValue1 + TempValue2));
         //为场景添加堆垛机设备
         GameObject PilerGroup = new GameObject(); PilerGroup.name = "PilerGroup";
         Create_Pilers(PL, PilerGroup);
-        //PilerGroup.transform.Rotate(0, 180, 0);
         PilerGroup.transform.parent = WarehouseScene.transform;
         PilerGroup.transform.localPosition = new Vector3(0, 0, -(TempValue1 + TempValue2));
-        //为场景添加出口输送线
-        GameObject ExitConveyors = new GameObject();
-        ExitConveyors.name = "ExitConveyors";
-        int i = (PL.MHP.Num + 1) / 2;
-        float TempValue = PL.RCP.RCWidth / 2 - ((2 * i + 1) * PL.HP.Size.x + i * PL.MHP.TunnelWidth + i * PL.MHP.HookupDistance);
-        Create_ExitConveyors(PL, ExitConveyors);
-        ExitConveyors.transform.parent = WarehouseScene.transform;
-        ExitConveyors.transform.localPosition = new Vector3(TempValue, 0, 0);
-
-        ////给场景添加Message
+        //添加出口滚筒输送机
+        GameObject ExitRollerConveyor = new GameObject();
+        RollerConveyor_Parameter exitRCP = PL.RCP;
+        exitRCP.RCLength = exitRollerLength; exitRCP.RCHigh = PL.RCP.RCHigh - 0.1f;
+        RollerConveyor.Create_RollerConveyor(exitRCP, ExitRollerConveyor, RollerConveyorType.Intact);
+        ExitRollerConveyor.name = "ExitRollerConveyor";
+        ExitRollerConveyor.transform.parent = WarehouseScene.transform;
+        int j = (PL.MHP.Num + 1) / 2 - 1;
+        float tempExitX = -PL.HP.Size.x - j * (PL.HP.Size.x * 2 + PL.MHP.HookupDistance + PL.MHP.TunnelWidth);
+        ExitRollerConveyor.transform.Rotate(0, -90, 0);
+        ExitRollerConveyor.transform.localPosition = new Vector3(tempExitX, 0, -TempValue2 / 2);
+        //添加出口顶升移栽机
+        GameObject ExitLiftTransfer = new GameObject();
+        ExitLiftTransfer.name = "ExitLiftTransfer";
+        LiftTransfer1.CreateLiftTransfer(ExitLiftTransfer, ref LTP);
+        ExitLiftTransfer.transform.parent = WarehouseScene.transform;
+        tempExitX = tempExitX - exitRollerLength - LTP.Width / 2;
+        ExitLiftTransfer.transform.localPosition = new Vector3(tempExitX, 0, -TempValue2 / 2);
+        //添加出口皮带输送线
+        GameObject ExitBeltConveyors = new GameObject();
+        ExitBeltConveyors.name = "ExitBeltConveyors";
+        Create_ExitBeltConveyors(PL, ExitBeltConveyors);
+        ExitBeltConveyors.transform.parent = WarehouseScene.transform;
+        ExitBeltConveyors.transform.localPosition = new Vector3(tempExitX, 0, 0);
+        //给场景添加Message
         WarehouseScene.AddComponent<ShowKeyPositionData>();
         ShowKeyPositionData ShowKeyData = WarehouseScene.GetComponent<ShowKeyPositionData>();
         KeyPositionsData KPD = new KeyPositionsData();
@@ -217,57 +247,38 @@ public class WareHouseScene1 : EditorWindow
     }
     #endregion
     //多线路输送机(平行于高架库方向)
-    #region Create_ConveyorGroup1
-    public void Create_ConveyorGroup1(ParametersList1 PL, GameObject ConveyorGroup)
+    #region Create_BeltConveyorGroup
+    public void Create_BeltConveyorGroup(ParametersList1 PL, GameObject ConveyorGroup)
     {
         HighStoreShelf_Parameter HP = PL.HP;
         MultiHighBay_Parameter MHP = PL.MHP;
-
-        GameObject BeltConveyor = new GameObject(); BeltConveyor.name = "BeltConveyor"; //string type1 = "Origion";
+        //先创建一条输送线,再clone
+        GameObject BeltConveyors = new GameObject();BeltConveyors.name = "BeltConveyors";
+        GameObject BeltConveyor = new GameObject();BeltConveyor.name = "BeltConveyor";
         RollerConveyor.Create_BeltConveyor(PL.RCP, BeltConveyor);
-        //采用皮带式输送机构造一条输送线
-        GameObject BeltConveyors = new GameObject(); BeltConveyors.name = "BeltConveyors";
-        BeltConveyor.transform.parent = BeltConveyors.transform; BeltConveyor.transform.Rotate(0, 180, 0);
-        BeltConveyor.transform.localPosition = new Vector3(0, 0, 0);
-        GameObject BeltConveyor2 = Instantiate(BeltConveyor); BeltConveyor2.name = BeltConveyor.name + 2.ToString();
-        BeltConveyor2.transform.parent = BeltConveyors.transform;
-        BeltConveyor2.transform.localPosition = new Vector3(0, 0, -PL.RCP.RCLength);
-        GameObject BeltConveyor3 = Instantiate(BeltConveyor); BeltConveyor3.name = BeltConveyor.name + 3.ToString();
-        BeltConveyor3.transform.parent = BeltConveyors.transform;
-        BeltConveyor3.transform.localPosition = new Vector3(0, 0, -PL.RCP.RCLength * 2);
-        //每两个高架库共用一条输送线
-        //int Num = PL.MHP.Num;//高架库个数
-        //float TunnelWidth = PL.MHP.TunnelWidth;//高架库之间的巷道距离
-        //float HookupDistance = PL.MHP.HookupDistance;//高架库之间的连接距离
-        //float Depth = PL.HP.Size.x;//高架库宽度
-        for (int i = 0; i < (PL.MHP.Num + 1) / 2; i++)
+        BeltConveyor.transform.Rotate(0, 180, 0);
+        for (int i = 0;i < (PL.MHP.Num + 1) / 2; i++)
         {
-            GameObject clone1 = Instantiate(BeltConveyors); clone1.transform.parent = ConveyorGroup.transform;
-            clone1.name = BeltConveyors.name + (i + 1).ToString();
+            GameObject clone1 = Instantiate(BeltConveyors); clone1.name = BeltConveyors.name + (i + 1).ToString();
+            for (int j = 0; j < 3; j++)
+            {
+                GameObject clone = Instantiate(BeltConveyor);
+                clone.name = BeltConveyor.name + (i + 1) + "_" + (j + 1);
+                clone.transform.parent = clone1.transform;
+                float tempZ = PL.RCP.RCLength * j;
+                clone.transform.localPosition = new Vector3(0, 0, -tempZ);
+            }
+            clone1.transform.parent = ConveyorGroup.transform;
             float TempValue1 = PL.RCP.RCWidth / 2 - ((2 * i + 1) * HP.Size.x + i * MHP.TunnelWidth + i * MHP.HookupDistance);
             clone1.transform.localPosition = new Vector3(TempValue1, 0, 0);
-            //switch (i % 2)
-            //{
-            //    case 0:
-            //        GameObject clone1 = Instantiate(RollerConveyor); clone1.transform.parent = ConveyorGroup.transform;
-            //        clone1.name = RollerConveyor.name + (i + 1).ToString();
-            //        float TempValue1 = PL.RCP.RCWidth / 2 - ((i + 1) * HP.HighBaySize[1] + (i / 2) * MHP.TunnelWidth + (i / 2) * MHP.HookupDistance);
-            //        clone1.transform.localPosition = new Vector3(TempValue1, 0, 0);
-            //        break;
-            //    case 1:
-            //        GameObject clone2 = Instantiate(RollerConveyor); clone2.transform.parent = ConveyorGroup.transform;
-            //        clone2.name = RollerConveyor.name + (i + 1).ToString();
-            //        float TempValue2 = PL.RCP.RCWidth / 2 - (i * HP.HighBaySize[1] + ((i + 1) / 2) * MHP.TunnelWidth + (i / 2) * MHP.HookupDistance);
-            //        clone2.transform.localPosition = new Vector3(TempValue2, 0, 0);
-            //        break;
-            //}
         }
+        DestroyImmediate(BeltConveyor);
         DestroyImmediate(BeltConveyors);
     }
     #endregion
-    //输送机（多个）（垂直于高架库方向）
-    #region Create_ConveyorGroup2
-    public void Create_ConveyorGroup2(ParametersList1 PL, GameObject ConveyorGroup)
+    //单向输送机（垂直于高架库方向）
+    #region Create_RollerConveyorGroup
+    public void Create_RollerConveyorGroup(ParametersList1 PL, GameObject ConveyorGroup)
     {
         RollerConveyor_Parameter RCP = new RollerConveyor_Parameter();
         RCP.RCHigh = PL.RCP.RCHigh - 0.1f;
@@ -275,11 +286,11 @@ public class WareHouseScene1 : EditorWindow
         RCP.RCLength = PL.MHP.HookupDistance + PL.MHP.TunnelWidth + 2 * PL.HP.Size.x - RCP.RCWidth;
         RCP.RollerRadius = PL.RCP.RollerRadius;
 
-        GameObject Conveyor = new GameObject(); Conveyor.name = "Conveyor";
+        GameObject Conveyor = new GameObject(); 
         RollerConveyorType type = RollerConveyorType.Intact;
         RollerConveyor.Create_RollerConveyor(RCP, Conveyor, type);
-
-        for (int i = 0; i < (PL.MHP.Num + 1) / 2; i++)//增加一个出口输送机
+        Conveyor.name = "RollerConveyor";
+        for (int i = 0; i < (PL.MHP.Num + 1) / 2 - 1; i++)
         {
             GameObject clone = Instantiate(Conveyor); clone.name = Conveyor.name + (i + 1).ToString();
             clone.transform.parent = ConveyorGroup.transform;
@@ -302,7 +313,7 @@ public class WareHouseScene1 : EditorWindow
 
         GameObject LiftTransfer = new GameObject(); LiftTransfer.name = "LiftTransfer";
         LiftTransfer1.CreateLiftTransfer(LiftTransfer, ref LTP);
-        for (int i = 0; i < (PL.MHP.Num + 1) / 2+1; i++)//增加一个出口顶升移栽机
+        for (int i = 0; i < (PL.MHP.Num + 1) / 2; i++)
         {
             GameObject clone = Instantiate(LiftTransfer); clone.name = LiftTransfer.name + (i + 1).ToString();
             clone.transform.parent = LiftTransferGroup.transform;
@@ -312,29 +323,41 @@ public class WareHouseScene1 : EditorWindow
         DestroyImmediate(LiftTransfer);
     }
     #endregion
-
-    #region Create_ExitConveyors
-    public void Create_ExitConveyors(ParametersList1 PL, GameObject BeltConveyors)
+    //创建入库的皮带输送机
+    #region Create_EnterBeltConveyors
+    public void Create_EnterBeltConveyors(ParametersList1 PL, GameObject BeltConveyors)
     {
-        HighStoreShelf_Parameter HP = PL.HP;
-        MultiHighBay_Parameter MHP = PL.MHP;
-
-        GameObject BeltConveyor = new GameObject(); BeltConveyor.name = "BeltConveyor"; //string type1 = "Origion";
+        GameObject BeltConveyor = new GameObject();
+        BeltConveyor.name = "EnterBeltConveyor";
         RollerConveyor.Create_BeltConveyor(PL.RCP, BeltConveyor);
-        //采用皮带式输送机构造一条输送线
-       // GameObject BeltConveyors = new GameObject(); BeltConveyors.name = "BeltConveyors";
-        BeltConveyor.transform.parent = BeltConveyors.transform; //BeltConveyor.transform.Rotate(0, -180, 0);
-        BeltConveyor.transform.localPosition = new Vector3(0, 0, 0);
-        GameObject BeltConveyor2 = Instantiate(BeltConveyor); BeltConveyor2.name = BeltConveyor.name + 2.ToString();
-        BeltConveyor2.transform.parent = BeltConveyors.transform;
-        BeltConveyor2.transform.localPosition = new Vector3(0, 0, PL.RCP.RCLength);
-        GameObject BeltConveyor3 = Instantiate(BeltConveyor); BeltConveyor3.name = BeltConveyor.name + 3.ToString();
-        BeltConveyor3.transform.parent = BeltConveyors.transform;
-        BeltConveyor3.transform.localPosition = new Vector3(0, 0, PL.RCP.RCLength * 2);
-        
-        //BeltConveyor
+        for (int i = 0; i < 2; i++)
+        {
+            GameObject clone = Instantiate(BeltConveyor);
+            clone.name = BeltConveyor.name + (i + 1);
+            clone.transform.parent = BeltConveyors.transform;
+            float tempZ = PL.RCP.RCLength * i;
+            clone.transform.localPosition = new Vector3(0, 0, tempZ);
+        }
+        DestroyImmediate(BeltConveyor);
     }
-    //DestroyImmediate(BeltConveyors);
+    #endregion
+    //创建出库的皮带输送机
+    #region Create_ExitBeltConveyors
+    public void Create_ExitBeltConveyors(ParametersList1 PL, GameObject BeltConveyors)
+    {
+        GameObject BeltConveyor = new GameObject();
+        BeltConveyor.name = "ExitBeltConveyor";
+        RollerConveyor.Create_BeltConveyor(PL.RCP, BeltConveyor);
+        for (int i = 0; i < 2; i++)
+        {
+            GameObject clone = Instantiate(BeltConveyor);
+            clone.name = BeltConveyor.name + (i + 1);
+            clone.transform.parent = BeltConveyors.transform;
+            float tempZ = PL.RCP.RCLength * i;
+            clone.transform.localPosition = new Vector3(0, 0, tempZ);
+        }
+        DestroyImmediate(BeltConveyor);
+    }
     #endregion
 
 
@@ -508,12 +531,10 @@ public void CreateCargo(Vector3 CargoSize, GameObject Cargo)
         StorePositions.StoreColumnPositions = StoreColumnPositions;
         StorePositions.StorePlacePosition = StorePlacePosition;
         KP.StorePositions = StorePositions;//高架库仓位坐标信息
+        //货物入口坐标（相对于设备）
+        KP.CargoEnterPosition = new Vector3(0, KP.HighValues[0], KP.ConveyorLengths[0]);
         KPD = KP;
-        Debug.Log(KPD.ConveyorLengths);
     }
     #endregion
-
-
-
 }
 

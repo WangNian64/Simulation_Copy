@@ -19,6 +19,7 @@ public enum ConveyorDirection//输送机排列方向
 public enum RollerConveyorType {
     Intact = 0,Origion=1, Terminus=2, Transition=3
 }
+
 public struct RollerConveyor_Parameter
 {
     public float RCLength;//滚筒输送机长度
@@ -193,8 +194,6 @@ public class RollerConveyor : MonoBehaviour
                 OBJ.name = "TransitionRollerConveyor";
                 break;
         }
-        //GameObject.Find("ScriptsContainer").GetComponent<MyClass>().Create2(OBJ);
-
     }
     #endregion
     //创建皮带式输送机

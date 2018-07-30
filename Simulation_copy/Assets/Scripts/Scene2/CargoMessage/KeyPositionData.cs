@@ -34,9 +34,7 @@ public class KeyPositionsData
 {
     public int HighBaysNum;//高架库数目
     public Vector3 EnterPosition;//入口坐标
-    //public Vector3[] LiftTransPositions;//
     public float[] HighValues;//输送线高度值（2个）
-    //public float[] ConveyorLengths;//输送机长度（2个）
     public float[] ConveyorLinesValues;//入库输送线X值
     public float[] ConveyorLengths;//入库输送线长度
     public float ConveyorWidth;
@@ -44,5 +42,7 @@ public class KeyPositionsData
     public Vector3[] HighBaysPositions;//高架库的坐标值
     public Vector3 CargoSize;//货物尺寸
     public StorePositions StorePositions;
+
+    public Vector3 CargoEnterPosition;//货物进入时的位置
 }
 

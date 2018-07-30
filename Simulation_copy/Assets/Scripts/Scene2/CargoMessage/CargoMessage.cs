@@ -21,6 +21,9 @@ public class CargoMessage {
     public PositionInfo PositionInfo;//所要存储所在仓位信息
     public string InputTime;//入库时间
     public string Description;//其他描述
+
+    public Queue<GameObject> EquipmentsQueue;//出入库经过的设备队列
+
 }
 
 //public struct PositionsList

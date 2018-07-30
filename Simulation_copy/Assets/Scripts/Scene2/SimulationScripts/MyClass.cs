@@ -63,18 +63,11 @@ public class MyClass : MonoBehaviour
     {
         var meshFilters = obj.GetComponentsInChildren<MeshFilter>();
         var combines = new CombineInstance[meshFilters.Length];
-        //var materialList = new List<Material>();
-        //string newMeshPath = path;
         for (int i = 0; i < meshFilters.Length; i++)
         {
             combines[i].mesh = meshFilters[i].sharedMesh;
             combines[i].transform = Matrix4x4.TRS(meshFilters[i].transform.position - obj.transform.position,
                 meshFilters[i].transform.rotation, meshFilters[i].transform.lossyScale);
-            //var materials = meshFilters[i].GetComponent<MeshRenderer>().sharedMaterials;
-            //foreach (var material in materials)
-            //{
-            //    materialList.Add(material);
-            //}
         }
         var newMesh = new Mesh();
         newMesh.CombineMeshes(combines, false);
@@ -128,5 +121,9 @@ public class MyClass : MonoBehaviour
         }
         else
             EditorUtility.DisplayDialog("Objects not exported", "Make sure at least some of your selected objects have mesh filters!", "");
+    }
+    public static bool isCrossPos(GameObject go, Vector3 pos)
+    {
+        return true;
     }
 }
