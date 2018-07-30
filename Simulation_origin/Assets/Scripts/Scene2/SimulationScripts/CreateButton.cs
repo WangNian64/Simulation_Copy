@@ -92,7 +92,6 @@ public class CreateButton : MonoBehaviour {
                     GameObject.Find("Notice").GetComponent<Text>().text = "该货物已存在！";
                 }
             }
-            
         }
     }
 }

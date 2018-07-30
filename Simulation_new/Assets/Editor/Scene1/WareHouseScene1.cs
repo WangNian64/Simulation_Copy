@@ -383,10 +383,9 @@ public void CreateCargo(Vector3 CargoSize, GameObject Cargo)
 
 
         Vector3 CargoSize;
-        //CargoSize.x = HP.Size.x;
-        //CargoSize.y = HP.Size.x;
-        //CargoSize.z = HP.Size.x;
-        CargoSize = new Vector3(0.4f, 0.4f, 0.4f);
+        CargoSize.x = HP.Size.x;
+        CargoSize.y = HP.Size.x;
+        CargoSize.z = HP.Size.x;
 
 
         RollerConveyor_Parameter RCP;
