@@ -1,0 +1,5 @@
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\obj\Debug\Assembly-CSharp-Editor.csprojResolveAssemblyReference.cache
+F:\今天国际项目\今天国际\Simulation\New Unity Project 2\obj\Debug\Assembly-CSharp-Editor.csprojResolveAssemblyReference.cache
+F:\今天国际项目\今天国际\Simulation\New Unity Project 2\obj\Debug\Assembly-CSharp-Editor.csproj.CoreCompileInputs.cache
+F:\今天国际项目\今天国际\Simulation\Simulation\obj\Debug\Assembly-CSharp-Editor.csprojResolveAssemblyReference.cache
+F:\今天国际项目\今天国际\Simulation\Simulation\obj\Debug\Assembly-CSharp-Editor.csproj.CoreCompileInputs.cache

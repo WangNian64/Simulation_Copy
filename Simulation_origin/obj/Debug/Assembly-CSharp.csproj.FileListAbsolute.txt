@@ -1,0 +1,39 @@
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Assembly-CSharp.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Assembly-CSharp.pdb
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEditor.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.Networking.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.UI.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Unity.SerializationLogic.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Unity.DataContract.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Unity.UNetWeaver.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Unity.CecilTools.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEditor.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.UI.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.Networking.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\obj\Debug\Assembly-CSharp.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\obj\Debug\Assembly-CSharp.pdb
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\nunit.framework.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.Analytics.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.HoloLens.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.TestRunner.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.TestRunner.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\nunit.framework.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.HoloLens.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.VR.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Mono.Cecil.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\ICSharpCode.NRefactory.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Mono.Cecil.Pdb.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\Mono.Cecil.Mdb.dll
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.Analytics.xml
+F:\今天国际项目\今天国际\Task4\New Unity Project 3\Temp\bin\Debug\UnityEngine.VR.xml
+F:\今天国际项目\今天国际\Simulation\New Unity Project 2\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
+F:\今天国际项目\今天国际\Simulation\New Unity Project 2\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
+F:\今天国际项目\今天国际\Simulation\New Unity Project 2\obj\Debug\Assembly-CSharp.dll
+F:\今天国际项目\今天国际\Simulation\New Unity Project 2\obj\Debug\Assembly-CSharp.pdb
+F:\今天国际项目\今天国际\Simulation\Simulation\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
+F:\今天国际项目\今天国际\Simulation\Simulation\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
+F:\今天国际项目\今天国际\Simulation\Simulation\obj\Debug\Assembly-CSharp.dll
+F:\今天国际项目\今天国际\Simulation\Simulation\obj\Debug\Assembly-CSharp.pdb

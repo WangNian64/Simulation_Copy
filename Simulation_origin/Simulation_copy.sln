@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simulation_copy", "Simulation_copy.csproj", "{C6267B32-27BF-8E00-9F8E-6407FDD8C908}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simulation_copy.Editor", "Simulation_copy.Editor.csproj", "{E0045A49-AC83-8837-C4DD-CCDBCE6CED7B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6267B32-27BF-8E00-9F8E-6407FDD8C908}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6267B32-27BF-8E00-9F8E-6407FDD8C908}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6267B32-27BF-8E00-9F8E-6407FDD8C908}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6267B32-27BF-8E00-9F8E-6407FDD8C908}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0045A49-AC83-8837-C4DD-CCDBCE6CED7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0045A49-AC83-8837-C4DD-CCDBCE6CED7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0045A49-AC83-8837-C4DD-CCDBCE6CED7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0045A49-AC83-8837-C4DD-CCDBCE6CED7B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
