@@ -128,7 +128,7 @@ public class CargoEnter : MonoBehaviour
         {
             //顶升将货物->滚筒
             LiftTransferPutDown();
-            //从顶升移栽机->下一个单向输送机，下标以顶升为准
+            //从顶升移栽机->下一个单向输送机
             LiftTransfer2UniConveyor(KeyStep);
             //经过该单向输送机
             UniConveyor0_1(KeyStep);
@@ -254,7 +254,6 @@ public class CargoEnter : MonoBehaviour
                     LiftTransferFinish[0, 0] = true;
                     this.transform.parent = GameObject.Find("WarehouseScene").transform;
                     DestroyImmediate(LiftTransfer1.GetComponent<LiftTransferMove>());
-                    KeyStep++;
                 }
             }
         }
@@ -262,74 +261,72 @@ public class CargoEnter : MonoBehaviour
     //UniConveyor过渡到顶升移载机
     public void UniConveyor2LiftTransfer(int i)
     {
-        if (UnidirectionFinish[i, 1] == true && LiftTransferFinish[i - 1, 0] == false)
+        if (i != 1)
         {
-            //访问顶升移载机
-            //还没有到最后一个顶升移栽机
-            if (i != PilerNum + 2)
+            if (UnidirectionFinish[i, 1] == true && LiftTransferFinish[i - 1, 0] == false)
             {
                 //访问顶升移载机
-                if (GlobalVariable.LiftTransferStates[i - 1] == State.Off && LiftTransferState[i - 1, 0] == false)
+                //还没有到最后一个顶升移栽机
+                if (i != PilerNum + 2)
                 {
-                    GlobalVariable.LiftTransferStates[i - 1] = State.On;
-                    LiftTransferState[i - 1, 0] = true;
-                    GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.Off;
-                }
-                //过渡
-                //移栽机0可行且未结束
-                if (LiftTransferState[i - 1, 0] == true && LiftTransferFinish[i - 1, 0] == false)
-                {
-                    //到移栽机位置
-                    this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[i - 1, 0], Speed * Time.deltaTime);
-                    if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[i - 1, 0])
-                    {
-                        //结束
-                        LiftTransferFinish[i - 1, 0] = true;
-
-                        //关键点下标+1
-                        KeyStep = KeyStep + 1;///////////////
-                    }
-                }
-            }
-            //已经到达最后一个移栽机（需要抬升）
-            if (i == PilerNum + 2)
-            {
-                //访问顶升移载机
-                //如果是入库
-                if (GlobalVariable.ConveyorDirections[PilerNum] == Direction.Enter)
-                {
-                    //顶升移栽机关闭且不可用
+                    //访问顶升移载机
                     if (GlobalVariable.LiftTransferStates[i - 1] == State.Off && LiftTransferState[i - 1, 0] == false)
                     {
-                        //开启
                         GlobalVariable.LiftTransferStates[i - 1] = State.On;
-                        //0可行
                         LiftTransferState[i - 1, 0] = true;
-                        //输送机的1要关闭
                         GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.Off;
                     }
-                }
-                //过渡
-                //0可行且未完成
-                if (LiftTransferState[i - 1, 0] == true && LiftTransferFinish[i - 1, 0] == false)
-                {
-                    //从单向输送机到达顶升移栽机
-                    this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[i - 1, 0], Speed * Time.deltaTime);
-                    if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[i - 1, 0])
+                    //过渡
+                    //移栽机0可行且未结束
+                    if (LiftTransferState[i - 1, 0] == true && LiftTransferFinish[i - 1, 0] == false)
                     {
-                        //已经到移栽机的0位置                  
-                        LiftTransferFinish[i - 1, 0] = true;
-                        //关键点下标+1
-                        KeyStep = KeyStep + 1;
-                        KeyFrame3 = true;
-                        //接下来的动画交给LiftPart
-                        //货物成为LiftPart的子组件
-                        //给顶升移栽机添加抬升脚本
-                        //模式为Up，暂时还不执行
-                        this.transform.parent = LiftPart2.transform;
-                        LiftTransfer2.AddComponent<LiftTransferMove>().enabled = false;
-                        LiftTransfer2.GetComponent<LiftTransferMove>().Speed = Speed / 30;
-                        LiftTransfer2.GetComponent<LiftTransferMove>().pattern = LiftTransferMove.Pattern.up;
+                        //到移栽机位置
+                        this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[i - 1, 0], Speed * Time.deltaTime);
+                        if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[i - 1, 0])
+                        {
+                            //结束
+                            LiftTransferFinish[i - 1, 0] = true;
+                        }
+                    }
+                }
+                //已经到达最后一个移栽机（需要抬升）
+                if (i == PilerNum + 2)
+                {
+                    //访问顶升移载机
+                    //如果是入库
+                    if (GlobalVariable.ConveyorDirections[PilerNum] == Direction.Enter)
+                    {
+                        //顶升移栽机关闭且不可用
+                        if (GlobalVariable.LiftTransferStates[i - 1] == State.Off && LiftTransferState[i - 1, 0] == false)
+                        {
+                            //开启
+                            GlobalVariable.LiftTransferStates[i - 1] = State.On;
+                            //0可行
+                            LiftTransferState[i - 1, 0] = true;
+                            //输送机的1要关闭
+                            GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.Off;
+                        }
+                    }
+                    //过渡
+                    //0可行且未完成
+                    if (LiftTransferState[i - 1, 0] == true && LiftTransferFinish[i - 1, 0] == false)
+                    {
+                        //从单向输送机到达顶升移栽机
+                        this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[i - 1, 0], Speed * Time.deltaTime);
+                        if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[i - 1, 0])
+                        {
+                            //已经到移栽机的0位置                  
+                            LiftTransferFinish[i - 1, 0] = true;
+                            KeyFrame3 = true;
+                            //接下来的动画交给LiftPart
+                            //货物成为LiftPart的子组件
+                            //给顶升移栽机添加抬升脚本
+                            //模式为Up，暂时还不执行
+                            this.transform.parent = LiftPart2.transform;
+                            LiftTransfer2.AddComponent<LiftTransferMove>().enabled = false;
+                            LiftTransfer2.GetComponent<LiftTransferMove>().Speed = Speed / 30;
+                            LiftTransfer2.GetComponent<LiftTransferMove>().pattern = LiftTransferMove.Pattern.up;
+                        }
                     }
                 }
             }
@@ -339,26 +336,27 @@ public class CargoEnter : MonoBehaviour
     public void LiftTransfer2UniConveyor(int i)
     {
         //到达顶升移载机，还没有到达下一个输送机的0点
-        if (LiftTransferFinish[i - 2, 0] == true && UnidirectionFinish[i, 0] == false)
+        if (LiftTransferFinish[i - 1, 0] == true && UnidirectionFinish[i + 1, 0] == false)
         {
             //访问UniConveyor
-            if (GlobalVariable.UnidirectionalConveyorStates[i, 0] == State.Off && UnidirectionState[i, 0] == false)
+            if (GlobalVariable.UnidirectionalConveyorStates[i + 1, 0] == State.Off && UnidirectionState[i + 1, 0] == false)
             {
-                GlobalVariable.UnidirectionalConveyorStates[i, 0] = State.On;
-                UnidirectionState[i, 0] = true;
+                GlobalVariable.UnidirectionalConveyorStates[i + 1, 0] = State.On;
+                UnidirectionState[i + 1, 0] = true;
             }
             //过渡（下一个关键点可用且未完成）
             //因为没有到达最后一个顶升移栽机，故不需要抬升，直接过去就行
-            if (UnidirectionState[i, 0] == true && UnidirectionFinish[i, 0] == false)
+            if (UnidirectionState[i + 1, 0] == true && UnidirectionFinish[i + 1, 0] == false)
             {
-                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i, 0], Speed * Time.deltaTime);
+                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i + 1, 0], Speed * Time.deltaTime);
                 //已经过了顶升移栽机，更新数据
-                if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i, 0])
+                if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i + 1, 0])
                 {
                     //未完成->已完成
-                    UnidirectionFinish[i, 0] = true;
+                    UnidirectionFinish[i + 1, 0] = true;
                     //工作状态：关闭
-                    GlobalVariable.LiftTransferStates[i - 2] = State.Off;
+                    GlobalVariable.LiftTransferStates[i - 1] = State.Off;
+                    KeyStep++;
                 }
             }
         }

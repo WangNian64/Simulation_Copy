@@ -194,8 +194,8 @@ public class Main : MonoBehaviour
         {
             for (int j = 0; j < 3; j++)
             {
-                GlobalVariable.BidirectionalPositions[i, j, 0] = GlobalVariable.LiftTransferPositions[i, 1];
-                GlobalVariable.BidirectionalPositions[i, j, 0].z = GlobalVariable.LiftTransferPositions[i, 1].z
+                GlobalVariable.BidirectionalPositions[i, j, 0] = GlobalVariable.LiftTransferPositions[i + 1, 1];
+                GlobalVariable.BidirectionalPositions[i, j, 0].z = GlobalVariable.LiftTransferPositions[i + 1, 1].z
                     - GlobalVariable.KPD.ConveyorWidth / 2 - GlobalVariable.KPD.CargoSize.z / 2 - j * GlobalVariable.KPD.ConveyorLengths[0] - 0.2F;
                 GlobalVariable.BidirectionalPositions[i, j, 1] = GlobalVariable.BidirectionalPositions[i, j, 0];
                 GlobalVariable.BidirectionalPositions[i, j, 1].z = GlobalVariable.BidirectionalPositions[i, j, 0].z
@@ -215,9 +215,11 @@ public class Main : MonoBehaviour
         //    GameObject obj = Instantiate(tempCargo);
         //    obj.transform.localPosition = GlobalVariable.UnidirectionalPositions[i, 0];
         //    obj.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //    obj.name = "cargo_" + i + "_0";
         //    GameObject obj1 = Instantiate(tempCargo);
         //    obj1.transform.localPosition = GlobalVariable.UnidirectionalPositions[i, 1];
         //    obj1.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //    obj1.name = "cargo_" + i + "_1";
         //}
         ////liftTransfer
         //for (int i = 0; i < PilerNums + 2; i++)
@@ -228,6 +230,19 @@ public class Main : MonoBehaviour
         //    GameObject obj1 = Instantiate(tempCargo);
         //    obj1.transform.localPosition = GlobalVariable.LiftTransferPositions[i, 1];
         //    obj1.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //}
+        //BiConveyor
+        //for (int i = 0; i < PilerNums; i++)
+        //{
+        //    for (int j = 0; j < 3; j++)
+        //    {
+        //        GameObject obj = Instantiate(tempCargo);
+        //        obj.transform.localPosition = GlobalVariable.BidirectionalPositions[i, j, 0];
+        //        obj.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //        GameObject obj1 = Instantiate(tempCargo);
+        //        obj1.transform.localPosition = GlobalVariable.BidirectionalPositions[i, j, 1];
+        //        obj1.transform.parent = GameObject.Find("WarehouseScene").transform;
+        //    }
         //}
         #endregion
     }

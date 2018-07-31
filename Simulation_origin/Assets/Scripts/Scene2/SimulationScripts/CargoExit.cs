@@ -6,7 +6,6 @@ using UnityEngine.UI;
 //货物出库
 public class CargoExit : MonoBehaviour
 {
-
     public float Speed; //移动速度
     public int PilerNum;//货物所在Piler编号
     private CargoMessage CM; //货物信息
@@ -42,36 +41,36 @@ public class CargoExit : MonoBehaviour
         LiftTransfer = GameObject.Find(LiftTransferName);
         string LiftPartName = LiftTransferName + "/LiftPart";
         LiftPart = GameObject.Find(LiftPartName);
-        string LiftTransferName1 = "WarehouseScene/LiftTransferGroup/LiftTransfer" + (PilerNums+1).ToString();
+        string LiftTransferName1 = "WarehouseScene/ExitLiftTransfer";
         LiftTransfer1 = GameObject.Find(LiftTransferName1);
         string LiftPartName1 = LiftTransferName1 + "/LiftPart";
         LiftPart1 = GameObject.Find(LiftPartName1);
         //货箱关键点状态
-
-        UnidirectionState = new bool[PilerNums + 4, 2];
-        UnidirectionFinish = new bool[PilerNums + 4, 2];
-        LiftTransferState = new bool[PilerNums + 1, 2];
-        LiftTransferFinish = new bool[PilerNums + 1, 3];
+        int ExitUniCSum = PilerNums + 2;
+        UnidirectionState = new bool[ExitUniCSum, 2];
+        UnidirectionFinish = new bool[ExitUniCSum, 2];
+        int ExitLiftSum = PilerNums + 1;
+        LiftTransferState = new bool[ExitLiftSum, 2];
+        LiftTransferFinish = new bool[ExitLiftSum, 3];
+        //入库对应的双向输送机
         BidirectionState = new bool[3, 2];
         BidirectionFinish = new bool[3, 2];
-        for (int i = 0; i <= PilerNums; i++)
+        for (int i = 0; i < ExitUniCSum; i++)
         {
             UnidirectionState[i, 0] = false; UnidirectionState[i, 1] = false;
-            LiftTransferState[i, 0] = false; UnidirectionState[i, 1] = false;
             UnidirectionFinish[i, 0] = false; UnidirectionFinish[i, 1] = false;
+        }
+        for (int i = 0; i < ExitLiftSum; i++)
+        {
+            LiftTransferState[i, 0] = false; LiftTransferFinish[i, 1] = false;
             LiftTransferFinish[i, 0] = false; LiftTransferFinish[i, 1] = false; LiftTransferFinish[i, 2] = false;
         }
-        UnidirectionState[PilerNums + 1, 0] = false; UnidirectionState[PilerNums + 1, 1] = false;
-        UnidirectionState[PilerNums + 2, 0] = false; UnidirectionState[PilerNums + 2, 1] = false;
-        UnidirectionState[PilerNums + 3, 0] = false; UnidirectionState[PilerNums + 3, 1] = false;
-        UnidirectionFinish[PilerNums + 1, 0] = false; UnidirectionFinish[PilerNums + 1, 1] = false;
-        UnidirectionFinish[PilerNums + 2, 0] = false; UnidirectionFinish[PilerNums + 2, 1] = false;
-        UnidirectionFinish[PilerNums + 3, 0] = false; UnidirectionFinish[PilerNums + 3, 1] = false;
         for (int i = 0; i < 3; i++)
         {
             BidirectionState[i, 0] = false; BidirectionState[i, 1] = false;
             BidirectionFinish[i, 0] = false; BidirectionFinish[i, 1] = false;
         }
+        
         AllRight = false;
         KeyStep = 0;//单向从0开始
         KeysNum = 2;//双向输送线从2开始
@@ -106,10 +105,10 @@ public class CargoExit : MonoBehaviour
         {
             //顶升移栽机工作
             WorkLiftTransfer();
-            //UniConveyor之间过渡运输货物
-            UniConveyor1_0(KeyStep);
             //UniConveyor运输货物
             UniConveyor0_1(KeyStep);
+            //UniConveyor过渡
+            UniConveyor1_0(KeyStep);
         }
     }
 
@@ -184,9 +183,9 @@ public class CargoExit : MonoBehaviour
         if (BidirectionFinish[0, 0] == true && LiftTransferFinish[PilerNum, 0] == false)
         {
             //访问输送机可行情况
-            if (GlobalVariable.LiftTransferStates[PilerNum] == State.Off && LiftTransferState[PilerNum, 0] == false)
+            if (GlobalVariable.LiftTransferStates[PilerNum + 1] == State.Off && LiftTransferState[PilerNum, 0] == false)
             {
-                GlobalVariable.LiftTransferStates[PilerNum] = State.On;
+                GlobalVariable.LiftTransferStates[PilerNum + 1] = State.On;
                 LiftTransferState[PilerNum, 0] = true;
                 //添加顶升移栽机动画（暂不执行）
                 LiftTransfer.AddComponent<LiftTransferMove>().enabled = false;
@@ -207,8 +206,8 @@ public class CargoExit : MonoBehaviour
             //货物过渡到顶升移载机上（此时1才完成）
             if (LiftTransferFinish[PilerNum, 2] == true && LiftTransferFinish[PilerNum, 1] == false)
             {
-                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[PilerNum, 1], Speed * Time.deltaTime);
-                if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[PilerNum, 1])
+                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[PilerNum + 1, 1], Speed * Time.deltaTime);
+                if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[PilerNum + 1, 1])
                 {
                     LiftTransferFinish[PilerNum, 1] = true;
                     this.transform.parent = LiftPart.transform;
@@ -250,24 +249,24 @@ public class CargoExit : MonoBehaviour
         if (UnidirectionFinish[i, 0] == true && UnidirectionFinish[i, 1] == false)
         {
             //访问1位置可行情况
-            if (GlobalVariable.UnidirectionalConveyorStates[i, 1] == State.Off && UnidirectionState[i, 1] == false)
+            if (GlobalVariable.UnidirectionalConveyorStates[i + 3, 1] == State.Off && UnidirectionState[i, 1] == false)
             {
-                GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.On;
+                GlobalVariable.UnidirectionalConveyorStates[i + 3, 1] = State.On;
                 UnidirectionState[i, 1] = true;
-                GlobalVariable.UnidirectionalConveyorStates[i, 0] = State.Off;
+                GlobalVariable.UnidirectionalConveyorStates[i + 3, 0] = State.Off;
             }
             //0位置移动到1位置
             if (UnidirectionState[i, 1] == true && UnidirectionFinish[i, 1] == false)
             {
-                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i, 1], Speed * Time.deltaTime);
-                if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i, 1])
+                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i + 3, 1], Speed * Time.deltaTime);
+                if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i + 3, 1])
                 {
                     UnidirectionFinish[i, 1] = true;
                     //到达出库的终点
-                    if (i == (PilerNums + 3))
+                    if (i == PilerNums + 1)
                     {
                         AllRight = true;//全部完成
-                        GlobalVariable.UnidirectionalConveyorStates[KeyStep, 1] = State.Off;
+                        GlobalVariable.UnidirectionalConveyorStates[KeyStep + 3, 1] = State.Off;///////////
                         //销毁进程列表
                         DestroyImmediate(GameObject.Find("ProcessInterface/MainBody/Scroll View/Viewport/Content").transform.Find(this.name).gameObject);
                         GlobalVariable.ExitQueue[PilerNum].Dequeue();
@@ -281,27 +280,28 @@ public class CargoExit : MonoBehaviour
     public void UniConveyor2LiftTransfer(int i)
     {
         //到BiConveyor的1没有到顶升的0
-        if (UnidirectionFinish[i, 1] == true && LiftTransferFinish[i, 0] == false)
+        if (UnidirectionFinish[i, 1] == true && LiftTransferFinish[i + 1, 0] == false)
         {
             //访问LiftTransfer可行情况
-            if (GlobalVariable.LiftTransferStates[i] == State.Off && LiftTransferState[i, 0] == false)
+            if (GlobalVariable.LiftTransferStates[i + 2] == State.Off && LiftTransferState[i + 1, 0] == false)
             {
-                GlobalVariable.LiftTransferStates[i] = State.On;
-                LiftTransferState[i, 0] = true;
-                GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.Off;
+                GlobalVariable.LiftTransferStates[i + 2] = State.On;
+                LiftTransferState[i + 1, 0] = true;
+                GlobalVariable.UnidirectionalConveyorStates[i + 3, 1] = State.Off;
             }
             //UniConveyor1位置过渡到LiftTransfer
-            if (LiftTransferState[i, 0] == true && LiftTransferFinish[i, 0] == false)
+            if (LiftTransferState[i + 1, 0] == true && LiftTransferFinish[i + 1, 0] == false)
             {
-                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[i, 0], Speed * Time.deltaTime);
-                if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[i, 0])
+                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.LiftTransferPositions[i + 2, 0], Speed * Time.deltaTime);
+                if (this.transform.localPosition == GlobalVariable.LiftTransferPositions[i + 2, 0])
                 {
-                    LiftTransferFinish[i, 0] = true;
+                    LiftTransferFinish[i + 1, 0] = true;
+                    KeyStep++;
                     //到达竖直的最后一个顶升
-                    if (i == PilerNums)
+                    if (i == PilerNums - 1)
                     {
                         KeyFrame2 = false;
-                        KeyStep = PilerNums + 1;
+                        KeyStep = PilerNums;
                         //添加顶升动画，准备将货物从BiConveyor取下
                         LiftTransfer1.AddComponent<LiftTransferMove>().enabled = false;
                         LiftTransfer1.GetComponent<LiftTransferMove>().Speed = Speed / 3;
@@ -315,23 +315,22 @@ public class CargoExit : MonoBehaviour
     //LiftTransfer过渡到UnidirectionConveyor0位置
     public void LiftTransfer2UniConveyor(int i)
     {
-        if (LiftTransferFinish[i, 0] == true && UnidirectionFinish[i + 1, 0] == false)
+        if (LiftTransferFinish[i, 0] == true && UnidirectionFinish[i, 0] == false)
         {
             //访问UniConveyor0位置可行情况
-            if (GlobalVariable.UnidirectionalConveyorStates[i + 1, 0] == State.Off && UnidirectionState[i + 1, 0] == false)
+            if (GlobalVariable.UnidirectionalConveyorStates[i + 3, 0] == State.Off && UnidirectionState[i, 0] == false)
             {
-                GlobalVariable.UnidirectionalConveyorStates[i + 1, 0] = State.On;
-                UnidirectionState[i + 1, 0] = true;
+                GlobalVariable.UnidirectionalConveyorStates[i + 3, 0] = State.On;
+                UnidirectionState[i, 0] = true;
             }
             //LiftTransfer过渡到UniConveyor0位置
-            if (UnidirectionState[i + 1, 0] == true && UnidirectionFinish[i + 1, 0] == false)
+            if (UnidirectionState[i, 0] == true && UnidirectionFinish[i, 0] == false)
             {
-                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i + 1, 0], Speed * Time.deltaTime);
-                if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i + 1, 0])
+                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i + 3, 0], Speed * Time.deltaTime);
+                if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i + 3, 0])
                 {
-                    UnidirectionFinish[i + 1, 0] = true;
-                    GlobalVariable.LiftTransferStates[i] = State.Off;
-                    KeyStep = KeyStep + 1;
+                    UnidirectionFinish[i, 0] = true;
+                    GlobalVariable.LiftTransferStates[i + 1] = State.Off;
                 }
             }
         }
@@ -352,29 +351,29 @@ public class CargoExit : MonoBehaviour
                     LiftTransferFinish[PilerNums, 1] = true;
                 }
             }
-            //货物过渡到双向输送线上
+            //货物过渡到皮带输送线上
             if (LiftTransferFinish[PilerNums, 1] == true && LiftTransferFinish[PilerNums, 2] == false)
             {
                 //访问
-                if (GlobalVariable.UnidirectionalConveyorStates[PilerNums + 1, 0] == State.Off && UnidirectionState[PilerNums + 1, 0] == false)
+                if (GlobalVariable.UnidirectionalConveyorStates[PilerNums + 3, 0] == State.Off && UnidirectionState[PilerNums, 0] == false)
                 {
-                    GlobalVariable.UnidirectionalConveyorStates[PilerNums + 1, 0] = State.On;
-                    UnidirectionState[PilerNums + 1, 0] = true;
+                    GlobalVariable.UnidirectionalConveyorStates[PilerNums + 3, 0] = State.On;
+                    UnidirectionState[PilerNums, 0] = true;
                     this.transform.parent = GameObject.Find("WarehouseScene").transform;
                 }
                 //过渡
-                if (UnidirectionState[PilerNums + 1, 0] == true && UnidirectionFinish[PilerNums + 1, 0] == false)
+                if (UnidirectionState[PilerNums, 0] == true && UnidirectionFinish[PilerNums, 0] == false)
                 {
-                    this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0], Speed * Time.deltaTime);
-                    if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[PilerNums + 1, 0])
+                    this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[PilerNums + 3, 0], Speed * Time.deltaTime);
+                    if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[PilerNums + 3, 0])
                     {
-                        UnidirectionFinish[PilerNums + 1, 0] = true;
+                        UnidirectionFinish[PilerNums, 0] = true;
                         LiftTransfer1.GetComponent<LiftTransferMove>().pattern = LiftTransferMove.Pattern.down;
-                        KeyStep = PilerNums + 1;
+                        KeyStep = PilerNums;
                     }
                 }
                 //顶升移载机降下
-                if (UnidirectionFinish[PilerNums + 1, 0] == true)
+                if (UnidirectionFinish[PilerNums, 0] == true)
                 {
                     LiftTransfer1.GetComponent<LiftTransferMove>().enabled = true;
                     if (LiftTransfer1.GetComponent<LiftTransferMove>().Finish2 == true)
@@ -384,7 +383,7 @@ public class CargoExit : MonoBehaviour
                         GameObject.Find("ProcessInterface/MainBody/Scroll View/Viewport/Content").transform.Find(this.name).transform.Find("State").GetComponent<Text>().text = "货物状态：" + "完成出库";//修改进程中该货物状态信息
                         Functions.ChangeColor(this.name, StorageBinState.NotStored);//修改该货物对应仓位的状态表示颜色
                         this.GetComponent<OperatingState>().state = CargoState.Exit;
-                        GlobalVariable.LiftTransferStates[PilerNums] = State.Off;
+                        GlobalVariable.LiftTransferStates[PilerNums + 1] = State.Off;
                     }
                 }
             }
@@ -393,28 +392,28 @@ public class CargoExit : MonoBehaviour
     //UnidirectionConveyor过渡到下一个UnidirectionConveyor
     public void UniConveyor1_0(int i)
     {
-        
-        if (UnidirectionFinish[i, 1] == true && UnidirectionFinish[i + 1, 0] == false)
+        if (i < PilerNums + 1)
         {
-            //访问下一个UniConveyor0位置可行情况
-            if (GlobalVariable.UnidirectionalConveyorStates[i + 1, 0] == State.Off && UnidirectionState[i + 1, 0] == false)
+            if (UnidirectionFinish[i, 1] == true && UnidirectionFinish[i + 1, 0] == false)
             {
-                GlobalVariable.UnidirectionalConveyorStates[i + 1, 0] = State.On;
-                UnidirectionState[i + 1, 0] = true;
-                GlobalVariable.UnidirectionalConveyorStates[i, 1] = State.Off;
-            }
-            //过渡移动
-            if (UnidirectionState[i + 1, 0] == true && UnidirectionFinish[i + 1, 0] == false)
-            {
-                this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i + 1, 0], Speed * Time.deltaTime);
-                if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i + 1, 0])
+                //访问下一个UniConveyor0位置可行情况
+                if (GlobalVariable.UnidirectionalConveyorStates[i + 4, 0] == State.Off && UnidirectionState[i + 1, 0] == false)
                 {
-                    UnidirectionFinish[i + 1, 0] = true;
-                    KeyStep = KeyStep + 1;
-                    
+                    GlobalVariable.UnidirectionalConveyorStates[i + 4, 0] = State.On;
+                    UnidirectionState[i + 1, 0] = true;
+                    GlobalVariable.UnidirectionalConveyorStates[i + 3, 1] = State.Off;
+                }
+                //过渡移动
+                if (UnidirectionState[i + 1, 0] == true && UnidirectionFinish[i + 1, 0] == false)
+                {
+                    this.transform.localPosition = Vector3.MoveTowards(this.transform.localPosition, GlobalVariable.UnidirectionalPositions[i + 4, 0], Speed * Time.deltaTime);
+                    if (this.transform.localPosition == GlobalVariable.UnidirectionalPositions[i + 4, 0])
+                    {
+                        UnidirectionFinish[i + 1, 0] = true;
+                        KeyStep = KeyStep + 1;
+                    }
                 }
             }
         }
     }
-    
 }

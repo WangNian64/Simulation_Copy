@@ -121,7 +121,7 @@ public class PilerOfExit: MonoBehaviour {
         ForksPositions[2].x = ForksPositions[1].x + TempValue3;//叉组位置2;叉组向平台伸出2/3（放货）
         
         Fork1Positions = new Vector3[3];
-        string name = "WarehouseScene/ConveyorGroup/BeltConveyors" + (PilerNum+1).ToString();
+        string name = "WarehouseScene/BeltConveyorGroup/BeltConveyors" + (PilerNum+1).ToString();
         Vector3 BeltConveyorPosition = GameObject.Find(name).transform.position;
         //伸出距离-叉组的2/3剩余的，由Fork1完成
         float TempValue4 = (Quaternion.Euler(RotationAngle) * (BeltConveyorPosition -  PilerPosition)).x - TempValue3;
